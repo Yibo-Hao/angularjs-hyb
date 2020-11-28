@@ -1,7 +1,8 @@
 import Scope from "../src/scope";
 
 describe('Scope', () => {
-    it('can be constructed and used as an object', function() {
+
+    it('can be constructed and used as an object', function () {
         const scope = new Scope();
         scope.aProperty = 1;
         expect(scope.aProperty).to.equals(1);
@@ -12,8 +13,10 @@ describe('Scope', () => {
         scope.someValue = 'a';
         scope.counter = 0;
         scope.$watch(
-            function(scope) { return scope.someValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) {
+                return scope.someValue;
+            },
+            function (newValue, oldValue, scope) {
                 scope.counter += 1;
             }
         );
@@ -28,14 +31,35 @@ describe('Scope', () => {
         expect(scope.counter).to.equals(2);
     });
 
-    it('calls listener when watch value is first undefined', function() {
+    it('calls listener when watch value is first undefined', function () {
         const scope = new Scope();
         scope.counter = 0;
         scope.$watch(
-            function(scope) { return scope.someValue; },
-            function(newValue, oldValue, scope) { scope.counter++; }
+            function (scope) {
+                return scope.someValue;
+            },
+            function (newValue, oldValue, scope) {
+                scope.counter++;
+            }
         );
         scope.$digest();
         expect(scope.counter).to.equals(1);
+    });
+
+    it('calls listener with new value as old value the first time', function () {
+        const scope = new Scope();
+        scope.someValue = 123;
+        let oldGiven = undefined;
+
+        scope.$watch(
+            function (scope) {
+                return scope.someValue
+            },
+            function (newValue, oldValue) {
+                oldGiven = oldValue
+            }
+        );
+        scope.$digest();
+        expect(oldGiven).to.equals(123);
     });
 })

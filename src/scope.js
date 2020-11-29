@@ -13,16 +13,26 @@ Scope.prototype.$watch = function (watchFn, listenerFn) {
 };
 
 Scope.prototype.$digest = function () {
+    let dirty;
+    do {
+        dirty = this.$$digestOnce();
+    } while (dirty);
+}
+
+Scope.prototype.$$digestOnce = function () {
+    let newValue, oldValue, dirty;
     this.$$watchers.forEach((watcher) => {
-        let newValue, oldValue;
         newValue = watcher.watchFn(this);
         oldValue = watcher.last;
         if (newValue !== oldValue) {
             watcher.last = newValue;
             watcher.listenerFn(newValue,
                 (oldValue === initWatchVal ? newValue : oldValue),
-                this);}
+                this);
+            dirty = true;
+        }
     })
+    return dirty;
 }
 
 export default Scope;

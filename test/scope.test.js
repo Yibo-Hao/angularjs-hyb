@@ -86,5 +86,27 @@ describe('Scope', () => {
         scope.name = 'Bob';
         scope.$digest();
         expect(scope.initial).to.equals('B.');
-    })
+    });
+
+    it('gives up on the watches after 10 iterations', function () {
+        const scope = new Scope();
+        scope.counterA = 0;
+        scope.counterB = 0;
+
+        scope.$watch(
+            function (scope) {return scope.counterA},
+            function (newValue, oldValue, scope) {
+                scope.counterB++;
+            }
+        )
+
+        scope.$watch(
+            function (scope) {return scope.counterB},
+            function (newValue, oldValue, scope) {
+                scope.counterA++;
+            }
+        )
+
+        expect((function() { scope.$digest(); })).to.throw();
+    });
 })

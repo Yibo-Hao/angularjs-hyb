@@ -142,4 +142,22 @@ describe('Scope', () => {
         scope.$digest();
         expect(watchExecutions).to.equals(301);
     })
+
+    it('compares based on value if enabled', function() {
+        const scope = new Scope();
+        scope.aValue = [1, 2, 3];
+        scope.counter = 0;
+        scope.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            },
+            true
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+        scope.aValue.push(4);
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
 })

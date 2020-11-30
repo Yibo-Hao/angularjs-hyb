@@ -1,4 +1,6 @@
-import Scope from "../src/scope";
+import _ from 'lodash';
+
+import Scope from '../src/scope';
 
 describe('Scope', () => {
 
@@ -63,19 +65,23 @@ describe('Scope', () => {
         expect(oldGiven).to.equals(123);
     });
 
-    it('triggers chained watchers in the same digest', function() {
+    it('triggers chained watchers in the same digest', function () {
         const scope = new Scope();
         scope.name = 'Jane';
         scope.$watch(
-            function(scope) { return scope.nameUpper; },
-            function(newValue, oldValue, scope) {
+            function (scope) {
+                return scope.nameUpper;
+            },
+            function (newValue, oldValue, scope) {
                 if (newValue) {
                     scope.initial = newValue.substring(0, 1) + '.';
                 }
             })
         scope.$watch(
-            function(scope) { return scope.name; },
-            function(newValue, oldValue, scope) {
+            function (scope) {
+                return scope.name;
+            },
+            function (newValue, oldValue, scope) {
                 if (newValue) {
                     scope.nameUpper = newValue.toUpperCase();
                 }
@@ -94,19 +100,46 @@ describe('Scope', () => {
         scope.counterB = 0;
 
         scope.$watch(
-            function (scope) {return scope.counterA},
+            function (scope) {
+                return scope.counterA
+            },
             function (newValue, oldValue, scope) {
                 scope.counterB++;
             }
         )
 
         scope.$watch(
-            function (scope) {return scope.counterB},
+            function (scope) {
+                return scope.counterB
+            },
             function (newValue, oldValue, scope) {
                 scope.counterA++;
             }
         )
 
-        expect((function() { scope.$digest(); })).to.throw();
+        expect((function () {
+            scope.$digest();
+        })).to.throw();
     });
+
+    it('ends the digest when the last watch is clean', function () {
+        const scope = new Scope();
+        scope.array = _.range(100);
+        let watchExecutions = 0;
+
+        _.times(100, function (i) {
+            scope.$watch(
+                function (scope) {
+                    watchExecutions++;
+                    return scope.array[i];
+                }
+            );
+        });
+
+        scope.$digest();
+        expect(watchExecutions).to.equals(200);
+        scope.array[0] = 420;
+        scope.$digest();
+        expect(watchExecutions).to.equals(301);
+    })
 })

@@ -143,13 +143,15 @@ describe('Scope', () => {
         expect(watchExecutions).to.equals(301);
     })
 
-    it('compares based on value if enabled', function() {
+    it('compares based on value if enabled', function () {
         const scope = new Scope();
         scope.aValue = [1, 2, 3];
         scope.counter = 0;
         scope.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             },
             true
@@ -161,13 +163,15 @@ describe('Scope', () => {
         expect(scope.counter).to.equals(2);
     });
 
-    it('correctly handles NaNs', function() {
+    it('correctly handles NaNs', function () {
         const scope = new Scope();
-        scope.number = 0/0; // NaN
+        scope.number = 0 / 0; // NaN
         scope.counter = 0;
         scope.$watch(
-            function(scope) { return scope.number; },
-            function(newValue, oldValue, scope) {
+            function (scope) {
+                return scope.number;
+            },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
@@ -176,4 +180,51 @@ describe('Scope', () => {
         scope.$digest();
         expect(scope.counter).to.equals(1);
     });
+
+    it('catches exceptions in watch functions and continues', function () {
+        const scope = new Scope();
+        scope.aValue = 'abc';
+        scope.counter = 0;
+        scope.$watch(
+            function (scope) {
+                throw 'Error';
+            },
+            function (newValue, oldValue, scope) {
+            }
+        );
+        scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+    });
+
+    it('catches exceptions in listener functions and continues', function () {
+        const scope = new Scope();
+        scope.aValue = 'abc';
+        scope.counter = 0;
+        scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                throw 'Error';
+            }
+        );
+        scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+    })
 })

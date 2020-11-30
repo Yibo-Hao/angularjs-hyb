@@ -33,17 +33,21 @@ Scope.prototype.$$digestOnce = function() {
     const self = this;
     let newValue, oldValue, dirty;
     _.forEach(this.$$watchers, function(watcher) {
-        newValue = watcher.watchFn(self);
-        oldValue = watcher.last;
-        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-            self.$$lastDirtyWatch = watcher;
-            watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
-            watcher.listenerFn(newValue,
-                (oldValue === initWatchVal ? newValue : oldValue),
-                self);
-            dirty = true;
-        } else if (self.$$lastDirtyWatch === watcher) {
-            return false;
+        try {
+            newValue = watcher.watchFn(self);
+            oldValue = watcher.last;
+            if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+                self.$$lastDirtyWatch = watcher;
+                watcher.last = (watcher.valueEq ? _.cloneDeep(newValue) : newValue);
+                watcher.listenerFn(newValue,
+                    (oldValue === initWatchVal ? newValue : oldValue),
+                    self);
+                dirty = true;
+            } else if (self.$$lastDirtyWatch === watcher) {
+                return false;
+            }
+        } catch (err) {
+            console.log(err);
         }
     })
     return dirty;

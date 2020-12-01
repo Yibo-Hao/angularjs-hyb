@@ -227,4 +227,53 @@ describe('Scope', () => {
         scope.$digest();
         expect(scope.counter).to.equals(1);
     })
+
+    it('allows destroying a $watch with a removal function', function () {
+        const scope = new Scope();
+        scope.aValue = 'abc';
+        scope.counter = 0;
+        const destroyWatch = scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+        scope.aValue = 'def';
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+        scope.aValue = 'ghi';
+        destroyWatch();
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
+
+    it('allows destroying a $watch during digest', function () {
+        const scope = new Scope();
+        scope.aValue = 'abc';
+        const watchCalls = [];
+        scope.$watch(
+            function (scope) {
+                watchCalls.push('first');
+                return scope.aValue;
+            }
+        );
+        const destroyWatch = scope.$watch(
+            function (scope) {
+                watchCalls.push('second');
+                destroyWatch();
+            }
+        );
+        scope.$watch(
+            function (scope) {
+                watchCalls.push('third');
+                return scope.aValue;
+            }
+        );
+        scope.$digest();
+        expect(watchCalls).to.deep.equals(['first', 'second', 'third', 'first', 'third']);
+    });
 })

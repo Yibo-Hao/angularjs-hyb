@@ -276,4 +276,56 @@ describe('Scope', () => {
         scope.$digest();
         expect(watchCalls).to.deep.equals(['first', 'second', 'third', 'first', 'third']);
     });
+
+    it('allows a $watch to destroy another during digest', function () {
+        const scope = new Scope();
+        scope.aValue = 'abc';
+        scope.counter = 0;
+        scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                destroyWatch();
+            }
+        );
+        const destroyWatch = scope.$watch(
+            function (scope) {
+            },
+            function (newValue, oldValue, scope) {
+            }
+        );
+        scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+    });
+
+    it('allows destroying several $watches during digest', function () {
+        const scope = new Scope();
+        scope.aValue = 'abc';
+        scope.counter = 0;
+        const destroyWatch1 = scope.$watch(
+            function (scope) {
+                destroyWatch1();
+                destroyWatch2();
+            }
+        );
+        const destroyWatch2 = scope.$watch(
+            function (scope) {
+                return scope.aValue;
+            },
+            function (newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(0);
+    });
 })

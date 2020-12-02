@@ -4,14 +4,18 @@ import Scope from '../src/scope';
 
 describe('Scope', () => {
 
+    let scope;
+
+    beforeEach(() => {
+        scope = new Scope();
+    });
+
     it('can be constructed and used as an object', function () {
-        const scope = new Scope();
         scope.aProperty = 1;
         expect(scope.aProperty).to.equals(1);
     });
 
     it('calls the listener function when the watched value changes', function () {
-        const scope = new Scope();
         scope.someValue = 'a';
         scope.counter = 0;
         scope.$watch(
@@ -34,7 +38,6 @@ describe('Scope', () => {
     });
 
     it('calls listener when watch value is first undefined', function () {
-        const scope = new Scope();
         scope.counter = 0;
         scope.$watch(
             function (scope) {
@@ -49,7 +52,6 @@ describe('Scope', () => {
     });
 
     it('calls listener with new value as old value the first time', function () {
-        const scope = new Scope();
         scope.someValue = 123;
         let oldGiven = undefined;
 
@@ -66,7 +68,6 @@ describe('Scope', () => {
     });
 
     it('triggers chained watchers in the same digest', function () {
-        const scope = new Scope();
         scope.name = 'Jane';
         scope.$watch(
             function (scope) {
@@ -95,7 +96,6 @@ describe('Scope', () => {
     });
 
     it('gives up on the watches after 10 iterations', function () {
-        const scope = new Scope();
         scope.counterA = 0;
         scope.counterB = 0;
 
@@ -123,7 +123,6 @@ describe('Scope', () => {
     });
 
     it('ends the digest when the last watch is clean', function () {
-        const scope = new Scope();
         scope.array = _.range(100);
         let watchExecutions = 0;
 
@@ -144,7 +143,6 @@ describe('Scope', () => {
     })
 
     it('compares based on value if enabled', function () {
-        const scope = new Scope();
         scope.aValue = [1, 2, 3];
         scope.counter = 0;
         scope.$watch(
@@ -164,7 +162,6 @@ describe('Scope', () => {
     });
 
     it('correctly handles NaNs', function () {
-        const scope = new Scope();
         scope.number = 0 / 0; // NaN
         scope.counter = 0;
         scope.$watch(
@@ -182,7 +179,6 @@ describe('Scope', () => {
     });
 
     it('catches exceptions in watch functions and continues', function () {
-        const scope = new Scope();
         scope.aValue = 'abc';
         scope.counter = 0;
         scope.$watch(
@@ -205,7 +201,6 @@ describe('Scope', () => {
     });
 
     it('catches exceptions in listener functions and continues', function () {
-        const scope = new Scope();
         scope.aValue = 'abc';
         scope.counter = 0;
         scope.$watch(
@@ -229,7 +224,6 @@ describe('Scope', () => {
     })
 
     it('allows destroying a $watch with a removal function', function () {
-        const scope = new Scope();
         scope.aValue = 'abc';
         scope.counter = 0;
         const destroyWatch = scope.$watch(
@@ -252,7 +246,6 @@ describe('Scope', () => {
     });
 
     it('allows destroying a $watch during digest', function () {
-        const scope = new Scope();
         scope.aValue = 'abc';
         const watchCalls = [];
         scope.$watch(
@@ -278,7 +271,6 @@ describe('Scope', () => {
     });
 
     it('allows a $watch to destroy another during digest', function () {
-        const scope = new Scope();
         scope.aValue = 'abc';
         scope.counter = 0;
         scope.$watch(
@@ -308,7 +300,6 @@ describe('Scope', () => {
     });
 
     it('allows destroying several $watches during digest', function () {
-        const scope = new Scope();
         scope.aValue = 'abc';
         scope.counter = 0;
         const destroyWatch1 = scope.$watch(
@@ -327,5 +318,58 @@ describe('Scope', () => {
         );
         scope.$digest();
         expect(scope.counter).to.equals(0);
+    });
+})
+
+describe('$eval', () => {
+
+    let scope;
+
+    beforeEach(() => {
+        scope = new Scope();
+    })
+
+    it('executes $eval function and returns result', function () {
+        scope.aValue = 42;
+        const result = scope.$eval(function (scope) {
+            return scope.aValue;
+        });
+        expect(result).to.equals(42);
+    });
+
+    it('passes the second $eval argument straight through', function () {
+        scope.aValue = 42;
+        const result = scope.$eval(function (scope, arg) {
+            return scope.aValue + arg;
+        }, 2);
+        expect(result).to.equals(44);
+    });
+})
+
+describe('$apply', () => {
+
+    let scope;
+
+    beforeEach(() => {
+        scope = new Scope();
+    })
+
+    it('executes the given function and starts the digest', function() {
+        scope.aValue = 'someValue';
+        scope.counter = 0;
+        scope.$watch(
+            function(scope) {
+                return scope.aValue;
+            },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+        scope.$apply(function(scope) {
+            scope.aValue = 'someOtherValue';
+        });
+        expect(scope.counter).to.equals(2);
     });
 })

@@ -3,6 +3,7 @@ import _ from 'lodash';
 function Scope() {
     this.$$watchers = [];
     this.$$lastDirtyWatch = null;
+    this.$$asyncQueue = [];
 }
 
 function initWatchVal() {}
@@ -31,12 +32,34 @@ Scope.prototype.$digest = function () {
     let dirty;
     this.$$lastDirtyWatch = null;
     do {
+        while (this.$$asyncQueue.length) {
+            let asyncTask = this.$$asyncQueue.shift();
+            asyncTask.scope.$eval(asyncTask.expression);
+        }
         dirty = this.$$digestOnce();
-        if (dirty && !(ttl--)) {
+        if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
             throw ('10 digest iterations reached');
         }
-    } while (dirty);
+    } while (dirty || this.$$asyncQueue.length);
 }
+
+Scope.prototype.$eval = function(expr, locals) {
+    const self = this;
+
+    return expr(self, locals);
+};
+
+Scope.prototype.$apply = function(expr) {
+    try {
+        return this.$eval(expr);
+    } finally {
+        this.$digest();
+    }
+};
+
+Scope.prototype.$evalAsync = function(expr) {
+    this.$$asyncQueue.push({scope: this, expression: expr});
+};
 
 Scope.prototype.$$digestOnce = function () {
     const self = this;
@@ -71,20 +94,6 @@ Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
         return newValue === oldValue ||
             (typeof newValue === 'number' && typeof oldValue === 'number' &&
                 isNaN(newValue) && isNaN(oldValue));
-    }
-};
-
-Scope.prototype.$eval = function(expr, locals) {
-    const self = this;
-
-    return expr(self, locals);
-};
-
-Scope.prototype.$apply = function(expr) {
-    try {
-        return this.$eval(expr);
-    } finally {
-        this.$digest();
     }
 };
 

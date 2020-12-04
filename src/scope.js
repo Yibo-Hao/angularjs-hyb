@@ -4,16 +4,20 @@ function Scope() {
     this.$$watchers = [];
     this.$$lastDirtyWatch = null;
     this.$$asyncQueue = [];
+    this.$$applyAsyncQueue = [];
+    this.$$applyAsyncId = null;
     this.$$phase = null;
 }
 
-function initWatchVal() {}
+function initWatchVal() {
+}
 
 Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
     const self = this;
     const watcher = {
         watchFn: watchFn,
-        listenerFn: listenerFn || function () {},
+        listenerFn: listenerFn || function () {
+        },
         valueEq: !!valueEq,
         last: initWatchVal
     };
@@ -33,6 +37,12 @@ Scope.prototype.$digest = function () {
     let dirty;
     this.$$lastDirtyWatch = null;
     this.$beginPhase('$digest');
+
+    if (this.$$applyAsyncId) {
+        clearTimeout(this.$$applyAsyncId);
+        this.$$flushApplyAsync();
+    }
+
     do {
         while (this.$$asyncQueue.length) {
             let asyncTask = this.$$asyncQueue.shift();
@@ -47,13 +57,13 @@ Scope.prototype.$digest = function () {
     this.$clearPhase();
 }
 
-Scope.prototype.$eval = function(expr, locals) {
+Scope.prototype.$eval = function (expr, locals) {
     const self = this;
 
     return expr(self, locals);
 };
 
-Scope.prototype.$apply = function(expr) {
+Scope.prototype.$apply = function (expr) {
     try {
         this.$beginPhase('$apply');
         return this.$eval(expr);
@@ -63,10 +73,10 @@ Scope.prototype.$apply = function(expr) {
     }
 };
 
-Scope.prototype.$evalAsync = function(expr) {
+Scope.prototype.$evalAsync = function (expr) {
     const self = this;
     if (!self.$$phase && !self.$$asyncQueue.length) {
-        setTimeout(function() {
+        setTimeout(function () {
             if (self.$$asyncQueue.length) {
                 self.$digest();
             }
@@ -76,15 +86,28 @@ Scope.prototype.$evalAsync = function(expr) {
 };
 
 
-Scope.prototype.$beginPhase = function(phase) {
+Scope.prototype.$beginPhase = function (phase) {
     if (this.$$phase) {
         throw this.$$phase + ' already in progress.';
     }
     this.$$phase = phase;
 };
 
-Scope.prototype.$clearPhase = function() {
+Scope.prototype.$clearPhase = function () {
     this.$$phase = null;
+};
+
+Scope.prototype.$applyAsync = function (expr) {
+    const self = this;
+
+    self.$$applyAsyncQueue.push(function () {
+        self.$eval(expr);
+    });
+    if (self.$$applyAsyncId === null) {
+        self.$$applyAsyncId = setTimeout(function () {
+            self.$apply(self.$$flushApplyAsync.bind(self));
+        }, 0);
+    }
 };
 
 Scope.prototype.$$digestOnce = function () {
@@ -112,6 +135,13 @@ Scope.prototype.$$digestOnce = function () {
     })
     return dirty;
 }
+
+Scope.prototype.$$flushApplyAsync = function () {
+    while (this.$$applyAsyncQueue.length) {
+        this.$$applyAsyncQueue.shift()();
+    }
+    this.$$applyAsyncId = null;
+};
 
 Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
     if (valueEq) {

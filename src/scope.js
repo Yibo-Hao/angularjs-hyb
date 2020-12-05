@@ -6,6 +6,7 @@ function Scope() {
     this.$$asyncQueue = [];
     this.$$applyAsyncQueue = [];
     this.$$applyAsyncId = null;
+    this.$$postDigestQueue = [];
     this.$$phase = null;
 }
 
@@ -45,8 +46,12 @@ Scope.prototype.$digest = function () {
 
     do {
         while (this.$$asyncQueue.length) {
-            let asyncTask = this.$$asyncQueue.shift();
-            asyncTask.scope.$eval(asyncTask.expression);
+            try {
+                let asyncTask = this.$$asyncQueue.shift();
+                asyncTask.scope.$eval(asyncTask.expression);
+            } catch (e) {
+                console.log(e);
+            }
         }
         dirty = this.$$digestOnce();
         if ((dirty || this.$$asyncQueue.length) && !(ttl--)) {
@@ -55,6 +60,14 @@ Scope.prototype.$digest = function () {
         }
     } while (dirty || this.$$asyncQueue.length);
     this.$clearPhase();
+
+    while (this.$$postDigestQueue.length) {
+        try {
+            this.$$postDigestQueue.shift()();
+        }catch (e) {
+            console.log(e);
+        }
+    }
 }
 
 Scope.prototype.$eval = function (expr, locals) {
@@ -138,7 +151,11 @@ Scope.prototype.$$digestOnce = function () {
 
 Scope.prototype.$$flushApplyAsync = function () {
     while (this.$$applyAsyncQueue.length) {
-        this.$$applyAsyncQueue.shift()();
+        try {
+            this.$$applyAsyncQueue.shift()();
+        }catch (e) {
+            console.log(e);
+        }
     }
     this.$$applyAsyncId = null;
 };
@@ -151,6 +168,57 @@ Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
             (typeof newValue === 'number' && typeof oldValue === 'number' &&
                 isNaN(newValue) && isNaN(oldValue));
     }
+};
+
+Scope.prototype.$$postDigest = function(fn) {
+    this.$$postDigestQueue.push(fn);
+};
+
+Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+    const self = this;
+    const newValues = new Array(watchFns.length);
+    const oldValues = new Array(watchFns.length);
+    let changeReactionScheduled = false;
+    let firstRun = true;
+
+    if (watchFns.length === 0) {
+        let shouldCall = true;
+        self.$evalAsync(function() {
+            if (shouldCall) {
+                listenerFn(newValues, newValues, self);
+            }
+        });
+        return function() {
+            shouldCall = false;
+        };
+    }
+
+    function watchGroupListener() {
+        if (firstRun) {
+            firstRun = false;
+            listenerFn(newValues, newValues, self);
+        } else {
+            listenerFn(newValues, oldValues, self);
+        }
+        changeReactionScheduled = false;
+    }
+
+    let destroyFunctions = _.map(watchFns, function(watchFn, i) {
+        return self.$watch(watchFn, function(newValue, oldValue) {
+            newValues[i] = newValue;
+            oldValues[i] = oldValue;
+            if (!changeReactionScheduled) {
+                changeReactionScheduled = true;
+                self.$evalAsync(watchGroupListener);
+            }
+        });
+    });
+
+    return function() {
+        _.forEach(destroyFunctions, function(destroyFunction) {
+            destroyFunction();
+        });
+    };
 };
 
 export default Scope;

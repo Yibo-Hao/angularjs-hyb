@@ -221,9 +221,10 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
 };
 
 Scope.prototype.$new = function () {
-    const ChildScope = function() { };
+    const ChildScope = function() {};
     ChildScope.prototype = this;
     const child = new ChildScope();
+    child.$$watchers = [];
     return child;
 }
 

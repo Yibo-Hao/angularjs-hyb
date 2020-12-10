@@ -816,4 +816,27 @@ describe('inheritance', () => {
         expect(aa.anotherValue).to.equals(undefined);
         expect(aaa.anotherValue).to.equals(undefined);
     });
+
+    it('shadows a parents property with the same name', function() {
+        const parent = new Scope();
+        const child = parent.$new();
+        parent.name = 'parent';
+        child.name = 'child'
+        expect(child.name).to.equals('child');
+        expect(parent.name).to.equals('parent');
+    });
+
+    it('does not digest its parent(s)', function () {
+        const parent = new Scope();
+        const child = parent.$new();
+        parent.aValue = 0;
+        parent.$watch(
+            function (scope) {return scope.aValue},
+            function (newValue, oldValue, scope) {
+                parent.anotherValue = 1;
+            }
+        )
+        child.$digest();
+        expect(parent.anotherValue).to.equals(undefined);
+    });
 })

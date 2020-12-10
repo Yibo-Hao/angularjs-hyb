@@ -839,4 +839,17 @@ describe('inheritance', () => {
         child.$digest();
         expect(parent.anotherValue).to.equals(undefined);
     });
+
+    it('keeps a record of its children', function() {
+        const parent = new Scope();
+        const child1 = parent.$new();
+        const child2 = parent.$new();
+        const child2_1 = child2.$new();
+        expect(parent.$$children.length).to.equals(2);
+        expect(parent.$$children[0]).to.equals(child1);
+        expect(parent.$$children[1]).to.equals(child2);
+        expect(child1.$$children.length).to.equals(0);
+        expect(child2.$$children.length).to.equals(1);
+        expect(child2.$$children[0]).to.equals(child2_1);
+    });
 })

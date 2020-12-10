@@ -98,7 +98,6 @@ Scope.prototype.$evalAsync = function (expr) {
     self.$$asyncQueue.push({scope: self, expression: expr});
 };
 
-
 Scope.prototype.$beginPhase = function (phase) {
     if (this.$$phase) {
         throw this.$$phase + ' already in progress.';
@@ -220,5 +219,12 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
         });
     };
 };
+
+Scope.prototype.$new = function () {
+    const ChildScope = function() { };
+    ChildScope.prototype = this;
+    const child = new ChildScope();
+    return child;
+}
 
 export default Scope;

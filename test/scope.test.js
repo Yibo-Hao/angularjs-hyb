@@ -760,3 +760,60 @@ describe('$watchGroup', () => {
         expect(counter).to.equals(0);
     });
 });
+
+describe('inheritance', () => {
+    it('inherits properties from parents', function () {
+        const parent = new Scope();
+        parent.value = [1, 2, 3];
+
+        const child = parent.$new()
+        expect(child.value).to.equals(parent.value);
+    });
+
+    it('dose not cause a parent inherit its properties' , function () {
+        const parent = new Scope();
+        const child = parent.$new()
+
+        child.value = [1, 2, 3];
+        expect(parent.value).to.equals(undefined);
+    });
+
+    it('can watch a property in the parent', function () {
+        const parent = new Scope();
+        const child = parent.$new();
+        parent.aValue = [1, 2, 3];
+        child.counter = 0;
+        child.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            },
+            true
+        );
+        child.$digest();
+        expect(child.counter).to.equals(1);
+        parent.aValue.push(4);
+        child.$digest();
+        expect(child.counter).to.equals(2);
+    });
+
+    it('can be nested at any depth', function() {
+        const a = new Scope();
+        const aa = a.$new();
+        const aaa = aa.$new();
+        const aab = aa.$new();
+        const ab = a.$new();
+        const abb = ab.$new();
+
+        a.value = 1;
+        expect(aa.value).to.equals(1);
+        expect(aaa.value).to.equals(1);
+        expect(aab.value).to.equals(1);
+        expect(ab.value).to.equals(1);
+        expect(abb.value).to.equals(1);
+        ab.anotherValue = 2;
+        expect(abb.anotherValue).to.equals(2);
+        expect(aa.anotherValue).to.equals(undefined);
+        expect(aaa.anotherValue).to.equals(undefined);
+    });
+})

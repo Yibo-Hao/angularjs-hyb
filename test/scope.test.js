@@ -869,4 +869,20 @@ describe('inheritance', () => {
         parent.$digest();
         expect(child.anotherValue).to.equals('abcd');
     });
+
+    it('digests from root on $apply', function() {
+        const parent = new Scope();
+        const child = parent.$new();
+        const child2 = child.$new();
+        parent.aValue = 'abc';
+        parent.counter = 0;
+        parent.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        child2.$apply(function(scope) {});
+        expect(parent.counter).to.equals(1);
+    });
 })

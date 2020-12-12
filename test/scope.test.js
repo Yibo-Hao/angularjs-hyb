@@ -852,4 +852,21 @@ describe('inheritance', () => {
         expect(child2.$$children.length).to.equals(1);
         expect(child2.$$children[0]).to.equals(child2_1);
     });
+
+    it('can digest its child', function () {
+        const parent = new Scope();
+        const child = parent.$new();
+        parent.aValue = 'abc';
+        child.$watch(
+            function (scope) {return scope.aValue},
+            function (newValue, oldValue, scope) {
+                scope.anotherValue = newValue;
+            }
+        )
+        parent.$digest();
+        expect(child.anotherValue).to.equals('abc');
+        parent.aValue = 'abcd';
+        parent.$digest();
+        expect(child.anotherValue).to.equals('abcd');
+    });
 })

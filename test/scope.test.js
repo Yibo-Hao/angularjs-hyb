@@ -885,4 +885,23 @@ describe('inheritance', () => {
         child2.$apply(function(scope) {});
         expect(parent.counter).to.equals(1);
     });
+
+    it('schedules a digest from root on  $evalAsync', function (done) {
+        const parent = new Scope();
+        const child = parent.$new();
+        const child2 = child.$new();
+        parent.aValue = 'abc';
+        parent.counter = 0;
+        parent.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        child2.$evalAsync(function(scope) {});
+        setTimeout(() => {
+            expect(parent.counter).to.equals(1);
+            done();
+        }, 50)
+    });
 })

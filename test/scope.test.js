@@ -762,6 +762,7 @@ describe('$watchGroup', () => {
 });
 
 describe('inheritance', () => {
+
     it('inherits properties from parents', function () {
         const parent = new Scope();
         parent.value = [1, 2, 3];
@@ -903,5 +904,72 @@ describe('inheritance', () => {
             expect(parent.counter).to.equals(1);
             done();
         }, 50)
+    });
+
+    it('does not have access to parent attributes when isolated', function() {
+        const parent = new Scope();
+        const child = parent.$new(true);
+        parent.aValue = 'abc';
+        expect(child.aValue).to.equals(undefined);
+    });
+
+    it('cannot watch parent attributes when isolated', function() {
+        const parent = new Scope();
+        const child = parent.$new(true);
+        parent.aValue = 'abc';
+        child.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.aValueWas = newValue;
+            }
+        );
+        child.$digest();
+        expect(child.aValue).to.equals(undefined);
+    });
+
+    it('digests from root on $apply when isolated', function() {
+        const parent = new Scope();
+        const child = parent.$new(true);
+        const child2 = child.$new();
+        parent.aValue = 'abc';
+        parent.counter = 0;
+        parent.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        child2.$apply(function(scope) {});
+        expect(parent.counter).to.equals(1);
+    });
+
+    it('schedules a digest from root on $evalAsync when isolated', function(done) {
+        const parent = new Scope();
+        const child = parent.$new(true);
+        const child2 = child.$new();
+        parent.aValue = 'abc';
+        parent.counter = 0;
+        parent.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        child2.$evalAsync(function(scope) {});
+        setTimeout(function() {
+            expect(parent.counter).to.equals(1);
+            done();
+        }, 50);
+    });
+
+    it("executes $applyAsync functions on isolated scopes", function(done) {
+        const parent = new Scope();
+        const child = parent.$new(true);
+        let applied = false;
+        parent.$applyAsync(function() {
+            applied = true;
+        });
+        child.$digest();
+        expect(applied).to.equals(true);
     });
 })

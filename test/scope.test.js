@@ -972,4 +972,27 @@ describe('inheritance', () => {
         child.$digest();
         expect(applied).to.equals(true);
     });
+
+    it('is no longer digested when $destroy has been called', function() {
+        const parent = new Scope();
+        const child = parent.$new();
+        child.aValue = [1, 2, 3];
+        child.counter = 0;
+        child.$watch(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            },
+            true
+        );
+        parent.$digest();
+        expect(child.counter).to.equals(1);
+        child.aValue.push(4);
+        parent.$digest();
+        expect(child.counter).to.equals(2);
+        child.$destroy();
+        child.aValue.push(5);
+        parent.$digest();
+        expect(child.counter).to.equals(2);
+    });
 })

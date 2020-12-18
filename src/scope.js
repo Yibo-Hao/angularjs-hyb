@@ -240,8 +240,20 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
     };
 };
 
-Scope.prototype.$new = function(isolated) {
+Scope.prototype.$destroy = function() {
+    if (this.$parent) {
+        const siblings = this.$parent.$$children;
+        const indexOfThis = siblings.indexOf(this);
+        if (indexOfThis >= 0) {
+            siblings.splice(indexOfThis, 1);
+        }
+    }
+    this.$$watchers = null;
+};
+
+Scope.prototype.$new = function(isolated, parent) {
     let child;
+    parent = parent || this;
     if (isolated) {
         child = new Scope();
         child.$root = this.$root;
@@ -256,6 +268,7 @@ Scope.prototype.$new = function(isolated) {
     this.$$children.push(child);
     child.$$watchers = [];
     child.$$children = [];
+    child.$parent = parent;
     return child;
 };
 

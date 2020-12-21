@@ -272,4 +272,14 @@ Scope.prototype.$new = function(isolated, parent) {
     return child;
 };
 
+Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
+    const internalWatchFn = function (scope) {
+    };
+
+    const internalListenerFn = function () {
+    };
+
+    return this.$watch(internalWatchFn, internalListenerFn);
+};
+
 export default Scope;

@@ -996,3 +996,10 @@ describe('inheritance', () => {
         expect(child.counter).to.equals(2);
     });
 })
+
+describe('$watchCollection', function() {
+    let scope;
+    beforeEach(function() {
+        scope = new Scope();
+    });
+});

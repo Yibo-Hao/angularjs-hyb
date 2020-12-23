@@ -962,7 +962,7 @@ describe('inheritance', () => {
         }, 50);
     });
 
-    it("executes $applyAsync functions on isolated scopes", function(done) {
+    it("executes $applyAsync functions on isolated scopes", function() {
         const parent = new Scope();
         const child = parent.$new(true);
         let applied = false;
@@ -1001,5 +1001,30 @@ describe('$watchCollection', function() {
     let scope;
     beforeEach(function() {
         scope = new Scope();
+    });
+
+    it('works like a normal watch for non-collections', function() {
+        let valueProvided;
+
+        scope.aValue = 42;
+        scope.counter = 0;
+
+        scope.$watchCollection(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                valueProvided = newValue;
+                scope.counter++;
+            }
+        )
+
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+        expect(valueProvided).to.equals(scope.aValue);
+
+        scope.aValue = 43;
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
     });
 });

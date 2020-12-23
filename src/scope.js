@@ -273,10 +273,22 @@ Scope.prototype.$new = function(isolated, parent) {
 };
 
 Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
+    const self = this;
+    let newValue,
+        oldValue,
+        changeCount = 0;
+
     const internalWatchFn = function (scope) {
+        newValue = watchFn(scope);
+        if (!self.$$areEqual(newValue, oldValue, false)) {
+            changeCount++;
+        }
+        oldValue = newValue;
+        return changeCount;
     };
 
     const internalListenerFn = function () {
+        listenerFn(newValue, oldValue, self);
     };
 
     return this.$watch(internalWatchFn, internalListenerFn);

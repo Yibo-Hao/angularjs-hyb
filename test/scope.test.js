@@ -1093,4 +1093,48 @@ describe('$watchCollection', function() {
         scope.$digest();
         expect(scope.counter).to.equals(2);
     });
+
+    it('notices an item replaced in an array', function () {
+        scope.counter = 0;
+        scope.arr = [1, 2, 3];
+
+        scope.$watchCollection(
+            function(scope) { return scope.arr; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        )
+
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+
+        scope.arr[0] = 2;
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
+
+    it('notices an item reordered in an array', function () {
+        scope.counter = 0;
+        scope.arr = [2, 1, 3];
+
+        scope.$watchCollection(
+            function(scope) { return scope.arr; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        )
+
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+
+        scope.arr.sort();
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
 });

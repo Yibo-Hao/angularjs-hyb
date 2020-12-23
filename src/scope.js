@@ -15,6 +15,14 @@ function Scope() {
 function initWatchVal() {
 }
 
+function isArrayLike(obj) {
+    if (_.isNull(obj) || _.isUndefined(obj)) {
+        return false;
+    }
+    const length = obj.length;
+    return _.isNumber(length);
+}
+
 Scope.prototype.$watch = function (watchFn, listenerFn, valueEq) {
     const self = this;
     const watcher = {
@@ -282,7 +290,7 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
         newValue = watchFn(scope);
 
         if (_.isObject(newValue)) {
-            if (_.isArray(newValue)) {
+            if (isArrayLike(newValue)) {
                 if(!_.isArray(oldValue)) {
                     changeCount++;
                     oldValue = [];

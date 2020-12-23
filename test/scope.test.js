@@ -1027,4 +1027,26 @@ describe('$watchCollection', function() {
         scope.$digest();
         expect(scope.counter).to.equals(2);
     });
+
+    it('notice when the value becomes an array', function () {
+        scope.counter = 0;
+        scope.aValue = 43;
+
+        scope.$watchCollection(
+            function(scope) { return scope.aValue; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        )
+
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+
+        scope.aValue = [1, 2, 3];
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
 });

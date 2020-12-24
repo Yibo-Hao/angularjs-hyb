@@ -19,6 +19,9 @@ function isArrayLike(obj) {
     if (_.isNull(obj) || _.isUndefined(obj)) {
         return false;
     }
+    if (typeof obj === 'function') {
+        return false
+    }
     const length = obj.length;
     return _.isNumber(length);
 }
@@ -307,6 +310,23 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
                     }
                 });
             } else {
+                if (!_.isObject(oldValue) || isArrayLike(oldValue)) {
+                    changeCount++;
+                    oldValue = {};
+                }
+                _.forOwn(newValue, function(newVal, key) {
+                    const bothNaN = _.isNaN(newVal) && _.isNaN(oldValue[key]);
+                    if (bothNaN && oldValue[key] !== newVal) {
+                        changeCount++;
+                        oldValue[key] = newVal;
+                    }
+                });
+                _.forOwn(oldValue, function(oldVal, key) {
+                    if (!newValue.hasOwnProperty(key)) {
+                        changeCount++;
+                        delete oldValue[key];
+                    }
+                });
             }
         } else {
             if (!self.$$areEqual(newValue, oldValue, false)) {

@@ -1175,4 +1175,19 @@ describe('$watchCollection', () => {
         scope.$digest();
         expect(scope.counter).to.equals(2);
     });
-});
+
+    it('does not consider an object with a length property an array', function () {
+        scope.obj = {length: 42, otherKey: 'abc'};
+        scope.counter = 0;
+        scope.$watchCollection(
+            function(scope) { return scope.obj; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        scope.obj.newKey = 'def';
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
+})

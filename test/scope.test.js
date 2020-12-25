@@ -997,7 +997,7 @@ describe('inheritance', () => {
     });
 })
 
-describe('$watchCollection', function() {
+describe('$watchCollection', () => {
     let scope;
     beforeEach(function() {
         scope = new Scope();
@@ -1152,6 +1152,24 @@ describe('$watchCollection', function() {
         scope.$digest();
         expect(scope.counter).to.equals(1);
         scope.arrayLike[1] = 42;
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+        scope.$digest();
+        expect(scope.counter).to.equals(2);
+    });
+
+    it('notices when an attribute is removed from an object', function() {
+        scope.counter = 0;
+        scope.obj = {a: 1};
+        scope.$watchCollection(
+            function(scope) { return scope.obj; },
+            function(newValue, oldValue, scope) {
+                scope.counter++;
+            }
+        );
+        scope.$digest();
+        expect(scope.counter).to.equals(1);
+        delete scope.obj.a;
         scope.$digest();
         expect(scope.counter).to.equals(2);
         scope.$digest();

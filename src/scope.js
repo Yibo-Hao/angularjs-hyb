@@ -77,7 +77,7 @@ Scope.prototype.$digest = function () {
     while (this.$$postDigestQueue.length) {
         try {
             this.$$postDigestQueue.shift()();
-        }catch (e) {
+        } catch (e) {
             console.log(e);
         }
     }
@@ -173,7 +173,7 @@ Scope.prototype.$$flushApplyAsync = function () {
     while (this.$$applyAsyncQueue.length) {
         try {
             this.$$applyAsyncQueue.shift()();
-        }catch (e) {
+        } catch (e) {
             console.log(e);
         }
     }
@@ -190,13 +190,13 @@ Scope.prototype.$$areEqual = function (newValue, oldValue, valueEq) {
     }
 };
 
-Scope.prototype.$$postDigest = function(fn) {
+Scope.prototype.$$postDigest = function (fn) {
     this.$$postDigestQueue.push(fn);
 };
 
-Scope.prototype.$$everyScope = function(fn) {
+Scope.prototype.$$everyScope = function (fn) {
     if (fn(this)) {
-        return this.$$children.every(function(child) {
+        return this.$$children.every(function (child) {
             return child.$$everyScope(fn);
         });
     } else {
@@ -204,7 +204,7 @@ Scope.prototype.$$everyScope = function(fn) {
     }
 };
 
-Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
+Scope.prototype.$watchGroup = function (watchFns, listenerFn) {
     const self = this;
     const newValues = new Array(watchFns.length);
     const oldValues = new Array(watchFns.length);
@@ -213,12 +213,12 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
 
     if (watchFns.length === 0) {
         let shouldCall = true;
-        self.$evalAsync(function() {
+        self.$evalAsync(function () {
             if (shouldCall) {
                 listenerFn(newValues, newValues, self);
             }
         });
-        return function() {
+        return function () {
             shouldCall = false;
         };
     }
@@ -233,8 +233,8 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
         changeReactionScheduled = false;
     }
 
-    let destroyFunctions = _.map(watchFns, function(watchFn, i) {
-        return self.$watch(watchFn, function(newValue, oldValue) {
+    let destroyFunctions = _.map(watchFns, function (watchFn, i) {
+        return self.$watch(watchFn, function (newValue, oldValue) {
             newValues[i] = newValue;
             oldValues[i] = oldValue;
             if (!changeReactionScheduled) {
@@ -244,14 +244,14 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
         });
     });
 
-    return function() {
-        _.forEach(destroyFunctions, function(destroyFunction) {
+    return function () {
+        _.forEach(destroyFunctions, function (destroyFunction) {
             destroyFunction();
         });
     };
 };
 
-Scope.prototype.$destroy = function() {
+Scope.prototype.$destroy = function () {
     if (this.$parent) {
         const siblings = this.$parent.$$children;
         const indexOfThis = siblings.indexOf(this);
@@ -262,7 +262,7 @@ Scope.prototype.$destroy = function() {
     this.$$watchers = null;
 };
 
-Scope.prototype.$new = function(isolated, parent) {
+Scope.prototype.$new = function (isolated, parent) {
     let child;
     parent = parent || this;
     if (isolated) {
@@ -272,7 +272,8 @@ Scope.prototype.$new = function(isolated, parent) {
         child.$$postDigestQueue = this.$$postDigestQueue;
         child.$$applyAsyncQueue = this.$$applyAsyncQueue;
     } else {
-        const ChildScope = function() {};
+        const ChildScope = function () {
+        };
         ChildScope.prototype = this;
         child = new ChildScope();
     }
@@ -287,14 +288,16 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
     const self = this;
     let newValue,
         oldValue,
+        oldLength,
         changeCount = 0;
 
     const internalWatchFn = function (scope) {
+        let newLength;
         newValue = watchFn(scope);
 
         if (_.isObject(newValue)) {
             if (isArrayLike(newValue)) {
-                if(!_.isArray(oldValue)) {
+                if (!_.isArray(oldValue)) {
                     changeCount++;
                     oldValue = [];
                 }
@@ -302,7 +305,7 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
                     changeCount++;
                     oldValue.length = newValue.length;
                 }
-                _.forEach(newValue, function(newItem, i) {
+                _.forEach(newValue, function (newItem, i) {
                     const bothNaN = _.isNaN(newItem) && _.isNaN(oldValue[i]);
                     if (!bothNaN && newItem !== oldValue[i]) {
                         changeCount++;
@@ -313,20 +316,33 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
                 if (!_.isObject(oldValue) || isArrayLike(oldValue)) {
                     changeCount++;
                     oldValue = {};
+                    oldLength = 0;
                 }
-                _.forOwn(newValue, function(newVal, key) {
-                    const bothNaN = _.isNaN(newVal) && _.isNaN(oldValue[key]);
-                    if (bothNaN && oldValue[key] !== newVal) {
+                newLength = 0;
+                _.forOwn(newValue, function (newVal, key) {
+                    newLength++;
+                    if (oldValue.hasOwnProperty(key)) {
+                        const bothNaN = _.isNaN(newVal) && _.isNaN(oldValue[key]);
+                        if (!bothNaN && oldValue[key] !== newVal) {
+                            changeCount++;
+                            oldValue[key] = newVal;
+                        }
+                    } else {
                         changeCount++;
+                        oldLength++;
                         oldValue[key] = newVal;
                     }
                 });
-                _.forOwn(oldValue, function(oldVal, key) {
-                    if (!newValue.hasOwnProperty(key)) {
-                        changeCount++;
-                        delete oldValue[key];
-                    }
-                });
+
+                if (oldLength > newLength) {
+                    changeCount++;
+                    _.forOwn(oldValue, function (oldVal, key) {
+                        if (!newValue.hasOwnProperty(key)) {
+                            oldLength--;
+                            delete oldValue[key];
+                        }
+                    });
+                }
             }
         } else {
             if (!self.$$areEqual(newValue, oldValue, false)) {

@@ -290,6 +290,9 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
     let newValue,
         oldValue,
         oldLength,
+        veryOldValue,
+        trackVeryOldValue = (listenerFn.length > 1),
+        firstRun = true,
         changeCount = 0;
 
     const internalWatchFn = function (scope) {
@@ -355,7 +358,15 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
     };
 
     const internalListenerFn = function () {
-        listenerFn(newValue, oldValue, self);
+        if (firstRun) {
+            listenerFn(newValue, newValue, self);
+            firstRun = false;
+        } else {
+            listenerFn(newValue, veryOldValue, self);
+        }
+        if (trackVeryOldValue) {
+            veryOldValue = _.clone(newValue);
+        }
     };
 
     return this.$watch(internalWatchFn, internalListenerFn);

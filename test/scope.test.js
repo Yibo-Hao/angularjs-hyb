@@ -679,15 +679,15 @@ describe('$watchGroup', () => {
         expect(gotOldValues).to.deep.equals([1, 2]);
     });
 
-    it('only calls listener once per digest', function() {
+    it('only calls listener once per digest', function () {
         let counter = 0;
         scope.aValue = 1;
         scope.anotherValue = 2;
         debugger
         scope.$watchGroup([
-            function(scope) { return scope.aValue; },
-            function(scope) { return scope.anotherValue; }
-        ], function(newValues, oldValues, scope) {
+            function (scope) { return scope.aValue; },
+            function (scope) { return scope.anotherValue; }
+        ], function (newValues, oldValues, scope) {
             counter++;
         });
         scope.$digest();
@@ -750,9 +750,9 @@ describe('$watchGroup', () => {
         expect(counter).to.equals(1);
     });
 
-    it('does not call the zero-watch listener when deregistered first', function() {
+    it('does not call the zero-watch listener when deregistered first', function () {
         let counter = 0;
-        const destroyGroup = scope.$watchGroup([], function(newValues, oldValues, scope) {
+        const destroyGroup = scope.$watchGroup([], function (newValues, oldValues, scope) {
             counter++;
         });
         destroyGroup();
@@ -771,7 +771,7 @@ describe('inheritance', () => {
         expect(child.value).to.equals(parent.value);
     });
 
-    it('dose not cause a parent inherit its properties' , function () {
+    it('dose not cause a parent inherit its properties', function () {
         const parent = new Scope();
         const child = parent.$new()
 
@@ -785,8 +785,8 @@ describe('inheritance', () => {
         parent.aValue = [1, 2, 3];
         child.counter = 0;
         child.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             },
             true
@@ -798,7 +798,7 @@ describe('inheritance', () => {
         expect(child.counter).to.equals(2);
     });
 
-    it('can be nested at any depth', function() {
+    it('can be nested at any depth', function () {
         const a = new Scope();
         const aa = a.$new();
         const aaa = aa.$new();
@@ -818,7 +818,7 @@ describe('inheritance', () => {
         expect(aaa.anotherValue).to.equals(undefined);
     });
 
-    it('shadows a parents property with the same name', function() {
+    it('shadows a parents property with the same name', function () {
         const parent = new Scope();
         const child = parent.$new();
         parent.name = 'parent';
@@ -832,7 +832,7 @@ describe('inheritance', () => {
         const child = parent.$new();
         parent.aValue = 0;
         parent.$watch(
-            function (scope) {return scope.aValue},
+            function (scope) { return scope.aValue },
             function (newValue, oldValue, scope) {
                 parent.anotherValue = 1;
             }
@@ -841,7 +841,7 @@ describe('inheritance', () => {
         expect(parent.anotherValue).to.equals(undefined);
     });
 
-    it('keeps a record of its children', function() {
+    it('keeps a record of its children', function () {
         const parent = new Scope();
         const child1 = parent.$new();
         const child2 = parent.$new();
@@ -859,7 +859,7 @@ describe('inheritance', () => {
         const child = parent.$new();
         parent.aValue = 'abc';
         child.$watch(
-            function (scope) {return scope.aValue},
+            function (scope) { return scope.aValue },
             function (newValue, oldValue, scope) {
                 scope.anotherValue = newValue;
             }
@@ -871,19 +871,19 @@ describe('inheritance', () => {
         expect(child.anotherValue).to.equals('abcd');
     });
 
-    it('digests from root on $apply', function() {
+    it('digests from root on $apply', function () {
         const parent = new Scope();
         const child = parent.$new();
         const child2 = child.$new();
         parent.aValue = 'abc';
         parent.counter = 0;
         parent.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
-        child2.$apply(function(scope) {});
+        child2.$apply(function (scope) { });
         expect(parent.counter).to.equals(1);
     });
 
@@ -894,32 +894,32 @@ describe('inheritance', () => {
         parent.aValue = 'abc';
         parent.counter = 0;
         parent.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
-        child2.$evalAsync(function(scope) {});
+        child2.$evalAsync(function (scope) { });
         setTimeout(() => {
             expect(parent.counter).to.equals(1);
             done();
         }, 50)
     });
 
-    it('does not have access to parent attributes when isolated', function() {
+    it('does not have access to parent attributes when isolated', function () {
         const parent = new Scope();
         const child = parent.$new(true);
         parent.aValue = 'abc';
         expect(child.aValue).to.equals(undefined);
     });
 
-    it('cannot watch parent attributes when isolated', function() {
+    it('cannot watch parent attributes when isolated', function () {
         const parent = new Scope();
         const child = parent.$new(true);
         parent.aValue = 'abc';
         child.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.aValueWas = newValue;
             }
         );
@@ -927,60 +927,60 @@ describe('inheritance', () => {
         expect(child.aValue).to.equals(undefined);
     });
 
-    it('digests from root on $apply when isolated', function() {
+    it('digests from root on $apply when isolated', function () {
         const parent = new Scope();
         const child = parent.$new(true);
         const child2 = child.$new();
         parent.aValue = 'abc';
         parent.counter = 0;
         parent.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
-        child2.$apply(function(scope) {});
+        child2.$apply(function (scope) { });
         expect(parent.counter).to.equals(1);
     });
 
-    it('schedules a digest from root on $evalAsync when isolated', function(done) {
+    it('schedules a digest from root on $evalAsync when isolated', function (done) {
         const parent = new Scope();
         const child = parent.$new(true);
         const child2 = child.$new();
         parent.aValue = 'abc';
         parent.counter = 0;
         parent.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
-        child2.$evalAsync(function(scope) {});
-        setTimeout(function() {
+        child2.$evalAsync(function (scope) { });
+        setTimeout(function () {
             expect(parent.counter).to.equals(1);
             done();
         }, 50);
     });
 
-    it("executes $applyAsync functions on isolated scopes", function() {
+    it("executes $applyAsync functions on isolated scopes", function () {
         const parent = new Scope();
         const child = parent.$new(true);
         let applied = false;
-        parent.$applyAsync(function() {
+        parent.$applyAsync(function () {
             applied = true;
         });
         child.$digest();
         expect(applied).to.equals(true);
     });
 
-    it('is no longer digested when $destroy has been called', function() {
+    it('is no longer digested when $destroy has been called', function () {
         const parent = new Scope();
         const child = parent.$new();
         child.aValue = [1, 2, 3];
         child.counter = 0;
         child.$watch(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             },
             true
@@ -999,19 +999,19 @@ describe('inheritance', () => {
 
 describe('$watchCollection', () => {
     let scope;
-    beforeEach(function() {
+    beforeEach(function () {
         scope = new Scope();
     });
 
-    it('works like a normal watch for non-collections', function() {
+    it('works like a normal watch for non-collections', function () {
         let valueProvided;
 
         scope.aValue = 42;
         scope.counter = 0;
 
         scope.$watchCollection(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 valueProvided = newValue;
                 scope.counter++;
             }
@@ -1033,8 +1033,8 @@ describe('$watchCollection', () => {
         scope.aValue = 43;
 
         scope.$watchCollection(
-            function(scope) { return scope.aValue; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.aValue; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         )
@@ -1055,8 +1055,8 @@ describe('$watchCollection', () => {
         scope.arr = [1, 2, 3];
 
         scope.$watchCollection(
-            function(scope) { return scope.arr; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.arr; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         )
@@ -1077,8 +1077,8 @@ describe('$watchCollection', () => {
         scope.arr = [1, 2, 3];
 
         scope.$watchCollection(
-            function(scope) { return scope.arr; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.arr; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         )
@@ -1099,8 +1099,8 @@ describe('$watchCollection', () => {
         scope.arr = [1, 2, 3];
 
         scope.$watchCollection(
-            function(scope) { return scope.arr; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.arr; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         )
@@ -1121,8 +1121,8 @@ describe('$watchCollection', () => {
         scope.arr = [2, 1, 3];
 
         scope.$watchCollection(
-            function(scope) { return scope.arr; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.arr; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         )
@@ -1138,14 +1138,14 @@ describe('$watchCollection', () => {
         expect(scope.counter).to.equals(2);
     });
 
-    it('notices an item replaced in an arguments object', function() {
-        (function() {
+    it('notices an item replaced in an arguments object', function () {
+        (function () {
             scope.arrayLike = arguments;
         })(1, 2, 3);
         scope.counter = 0;
         scope.$watchCollection(
-            function(scope) { return scope.arrayLike; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.arrayLike; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
@@ -1158,12 +1158,12 @@ describe('$watchCollection', () => {
         expect(scope.counter).to.equals(2);
     });
 
-    it('notices when an attribute is removed from an object', function() {
+    it('notices when an attribute is removed from an object', function () {
         scope.counter = 0;
-        scope.obj = {a: 1};
+        scope.obj = { a: 1 };
         scope.$watchCollection(
-            function(scope) { return scope.obj; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.obj; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
@@ -1177,11 +1177,11 @@ describe('$watchCollection', () => {
     });
 
     it('does not consider an object with a length property an array', function () {
-        scope.obj = {length: 42, otherKey: 'abc'};
+        scope.obj = { length: 42, otherKey: 'abc' };
         scope.counter = 0;
         scope.$watchCollection(
-            function(scope) { return scope.obj; },
-            function(newValue, oldValue, scope) {
+            function (scope) { return scope.obj; },
+            function (newValue, oldValue, scope) {
                 scope.counter++;
             }
         );
@@ -1191,3 +1191,41 @@ describe('$watchCollection', () => {
         expect(scope.counter).to.equals(2);
     });
 })
+
+describe('events', function () {
+    const parent;
+    const scope;
+    const child;
+    const isolatedChild;
+    beforeEach(function () {
+        parent = new Scope();
+        scope = parent.$new();
+        child = scope.$new();
+        isolatedChild = scope.$new(true);
+    });
+
+    it('allows registering listeners', function () {
+        const listener1 = function () { };
+        const listener2 = function () { };
+        const listener3 = function () { };
+        scope.$on('someEvent', listener1);
+        scope.$on('someEvent', listener2);
+        scope.$on('someOtherEvent', listener3);
+        expect(scope.$$listeners).toEqual({
+            someEvent: [listener1, listener2],
+            someOtherEvent: [listener3]
+        });
+    });
+
+    it('registers different listeners for every scope', function () {
+        const listener1 = function () { };
+        const listener2 = function () { };
+        const listener3 = function () { };
+        scope.$on('someEvent', listener1);
+        child.$on('someEvent', listener2);
+        isolatedChild.$on('someEvent', listener3);
+        expect(scope.$$listeners).toEqual({ someEvent: [listener1] });
+        expect(child.$$listeners).toEqual({ someEvent: [listener2] });
+        expect(isolatedChild.$$listeners).toEqual({ someEvent: [listener3] });
+    });
+});

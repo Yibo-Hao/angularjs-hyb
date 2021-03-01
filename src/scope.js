@@ -2,6 +2,7 @@ import _ from 'lodash';
 
 function Scope() {
     this.$$watchers = [];
+    this.$$listeners = {};
     this.$$lastDirtyWatch = null;
     this.$$asyncQueue = [];
     this.$$applyAsyncQueue = [];
@@ -109,7 +110,7 @@ Scope.prototype.$evalAsync = function (expr) {
             }
         }, 0);
     }
-    self.$$asyncQueue.push({scope: self, expression: expr});
+    self.$$asyncQueue.push({ scope: self, expression: expr });
 };
 
 Scope.prototype.$beginPhase = function (phase) {
@@ -280,6 +281,7 @@ Scope.prototype.$new = function (isolated, parent) {
     }
     this.$$children.push(child);
     child.$$watchers = [];
+    child.$$listeners = {};
     child.$$children = [];
     child.$parent = parent;
     return child;
@@ -370,6 +372,29 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
     };
 
     return this.$watch(internalWatchFn, internalListenerFn);
+};
+
+Scope.prototype.$on = function (eventName, listener) {
+    const listeners = this.$$listeners[eventName];
+    if (!listeners) {
+        this.$$listeners[eventName] = listeners = [];
+    }
+    listeners.push(listener);
+};
+
+Scope.prototype.$emit = function (eventName) {
+    this.$$fireEventOnScope(eventName);
+};
+
+Scope.prototype.$broadcast = function (eventName) {
+    this.$$fireEventOnScope(eventName);
+};
+
+Scope.prototype.$$fireEventOnScope = function (eventName) {
+    const listeners = this.$$listeners[eventName] || [];
+    _.forEach(listeners, function (listener) {
+        listener();
+    });
 };
 
 export default Scope;

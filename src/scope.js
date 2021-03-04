@@ -375,26 +375,43 @@ Scope.prototype.$watchCollection = function (watchFn, listenerFn) {
 };
 
 Scope.prototype.$on = function (eventName, listener) {
-    const listeners = this.$$listeners[eventName];
+    let listeners = this.$$listeners[eventName];
     if (!listeners) {
         this.$$listeners[eventName] = listeners = [];
     }
     listeners.push(listener);
+    return function () {
+        const index = listeners.indexOf(listener);
+        if (index >= 0) {
+            listeners[index] = null;
+        }
+    };
 };
 
 Scope.prototype.$emit = function (eventName) {
-    this.$$fireEventOnScope(eventName);
+    const additionalArgs = _.tail(arguments);
+    return this.$$fireEventOnScope(eventName, additionalArgs);
 };
 
 Scope.prototype.$broadcast = function (eventName) {
-    this.$$fireEventOnScope(eventName);
+    const additionalArgs = _.tail(arguments);
+    return this.$$fireEventOnScope(eventName, additionalArgs);
 };
 
-Scope.prototype.$$fireEventOnScope = function (eventName) {
+Scope.prototype.$$fireEventOnScope = function (eventName, additionalArgs) {
+    const event = { name: eventName };
+    const listenerArgs = [event].concat(additionalArgs);
     const listeners = this.$$listeners[eventName] || [];
-    _.forEach(listeners, function (listener) {
-        listener();
-    });
+    let i = 0;
+    while (i < listeners.length) {
+        if (listeners[i] === null) {
+            listeners.splice(i, 1);
+        } else {
+            listeners[i].apply(null, listenerArgs);
+            i++;
+        }
+    }
+    return event;
 };
 
 export default Scope;

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-
 import Scope from '../src/scope';
 
 describe('Scope', () => {
@@ -1193,10 +1192,10 @@ describe('$watchCollection', () => {
 })
 
 describe('events', function () {
-    const parent;
-    const scope;
-    const child;
-    const isolatedChild;
+    let parent;
+    let scope;
+    let child;
+    let isolatedChild;
     beforeEach(function () {
         parent = new Scope();
         scope = parent.$new();
@@ -1211,7 +1210,7 @@ describe('events', function () {
         scope.$on('someEvent', listener1);
         scope.$on('someEvent', listener2);
         scope.$on('someOtherEvent', listener3);
-        expect(scope.$$listeners).toEqual({
+        expect(scope.$$listeners).to.deep.equals({
             someEvent: [listener1, listener2],
             someOtherEvent: [listener3]
         });
@@ -1224,8 +1223,20 @@ describe('events', function () {
         scope.$on('someEvent', listener1);
         child.$on('someEvent', listener2);
         isolatedChild.$on('someEvent', listener3);
-        expect(scope.$$listeners).toEqual({ someEvent: [listener1] });
-        expect(child.$$listeners).toEqual({ someEvent: [listener2] });
-        expect(isolatedChild.$$listeners).toEqual({ someEvent: [listener3] });
+        expect(scope.$$listeners).to.deep.equals({ someEvent: [listener1] });
+        expect(child.$$listeners).to.deep.equals({ someEvent: [listener2] });
+        expect(isolatedChild.$$listeners).to.deep.equals({ someEvent: [listener3] });
+    });
+
+    _.forEach(['$emit', '$broadcast'], function (method) {
+        it('calls listeners registered for matching events on ' + method, function () {
+            const listener1 = sinon.spy();
+            const listener2 = sinon.spy();
+            scope.$on('someEvent', listener1);
+            scope.$on('someOtherEvent', listener2);
+            scope[method]('someEvent');
+            expect(listener1).to.have.been.calledWith();
+            expect(listener2).not.to.have.been.calledWith();
+        });
     });
 });
